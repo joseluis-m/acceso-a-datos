@@ -177,40 +177,79 @@ Aquí, indicamos: con `groupId`, el identificador de la organización/proyecto (
 con `artifactId`, el nombre concreto del módulo (jar final), el cual debe ser estable y legible;
 y con `version`, la versión semántica del artefacto (en nuestro ejemplo, con poner 1.0.0 es suficiente).
 
-  <properties>                                                               
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>       <!-- [9] -->
-    <maven.compiler.release>17</maven.compiler.release>                      <!-- [10] -->
-    <slf4j.version>2.0.13</slf4j.version>                                    <!-- [11] -->
-    <logback.version>1.5.6</logback.version>                                 <!-- [12] -->
-  </properties>
+> Nota: En Maven, un artefacto es el archivo publicable que produce o usa un proyecto, identificado de forma única por sus coordenadas `groupId:artifactId:version`. Ejemplos: JAR (librería o ejecutable), WAR, POM, BOM.
 
+Ahora veremos algunas propiedades clave para el ejercicio que hemos realizado anteriormente:
+
+```xml
+  <properties>                                                               
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+    <slf4j.version>2.0.13</slf4j.version>
+    <logback.version>1.5.6</logback.version>
+  </properties>
+```
+
+- `<project.build.sourceEncoding>` asegura que todas las fuentes y recursos se compilan y empaquetan como UTF-8. Evita mojibake y problemas de tildes o caracteres como la 'ñ' entre máquinas.
+- `<maven.compiler.release>` establece Java 25 como release level (mejor que source/target porque no solo fija sintaxis y bytecode, sino que además bloquea el uso de APIs de JDK que no existen en la versión objetivo). Genera bytecode compatible con el runtime 25 y usa el JDK Platform Module System apropiado.
+- `<slf4j.version>` y `<logback.version>` establece las versiones de logging. Se evita mismatch entre API (SLF4J) e implementación (binding Logback).
+
+Ahora tenemos que introducir algunas dependencias mínimas para nuestro ejercicio. `slf4j-api` es la API de logging que importamos en el código (`Logger`, `LoggerFactory`). Cabe destacar que `${slf4j.version}` es un placeholder de Maven que se sustituye en tiempo de build por la versión que hemos definido antes en `<properties>` (en nuestro caso, la 2.0.13). Esto es importante porque se declara la versión una sola vez, y luego se reutiliza en todo el proyecto evitando desajustes entre módulos.
+
+```xml
   <dependencies>
     <!-- API de logging (SLF4J) -->
     <dependency>                                                             
-      <groupId>org.slf4j</groupId>                                           <!-- [13] -->
-      <artifactId>slf4j-api</artifactId>                                     <!-- [14] -->
-      <version>${slf4j.version}</version>                                    <!-- [15] -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
+```
 
+Sin embargo, sin un “binding” en el classpath, SLF4J no sabe dónde escribir (consola, fichero, etc.).
+Por tanto, es necesaria la implementación binding de SLF4J, que será el backend real que sí escribe los logs.
+Algunas opciones típicas son Logback, SLF4J Simple o Log4j2. Nosotros vamos a usar `logback-classic` para proveer el backend real.
+El binding busca un archivo `logback.xml` en classpath y, si no está (como en nuestro ejercicio), aplica una configuración por defecto (normalmente salida a consola). El `logback.xml` solo hace falta si quieres controlar nivel, patrón, destino, etc.
+
+En nuestro ejercicio, la clase `Ex1ReadText` usa `LoggerFactory.getLogger(...)` que viene `slf4j-api`.
+Que se imprima algo depende de `logback-classic` + el `logback.xml` (nivel, patrón, destino).
+Recordemos que `<groupID>` y `<artifactID>` son parte de la identidad del artefacto (biblioteca, app, plugin, etc.).
+Junto con `<version>`, identifican unívocamente un JAR (o WAR, POM, etc.): `groupId:artifactId:version`.
+
+> Nota: Un *JAR* (Java ARchive) es un archivo ZIP con extensión `.jar` que empaqueta clases compiladas (`.class`), recursos (propiedades, imágenes, XML, etc.) y un `META-INF/MANIFEST.MF` con metadatos.
+
+```xml
     <!-- Implementación de logging (Logback: binding de SLF4J) -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>                                      <!-- [16] -->
-      <artifactId>logback-classic</artifactId>                               <!-- [17] -->
-      <version>${logback.version}</version>                                   <!-- [18] -->
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
     </dependency>
   </dependencies>
+```
 
+Por último, solo nos queda poner el build y el plugin de compilación:
+
+```xml
   <build>
     <plugins>
       <!-- Compilación moderna: usa 'release' para target multiplataforma -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>                          <!-- [19] -->
-        <artifactId>maven-compiler-plugin</artifactId>                       <!-- [20] -->
-        <version>3.13.0</version>                                            <!-- [21] -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
         <configuration>
-          <release>${maven.compiler.release}</release>                       <!-- [22] -->
+          <release>${maven.compiler.release}</release>
         </configuration>
       </plugin>
     </plugins>
   </build>
 </project>
+```
+
+En `<build>` configuramos el proceso de construcción del proyecto mediante `<plugins>` (contenedor que agrupa todos los `<plugin>`).
+`maven-compiler-plugin` se encarga de compilar el código apuntando a Java 25 (`<release>25</release>`, ya que `${maven.compiler.release}` es un placeholder que se sustituye en tiempo de build). Por tanto, exige compilar con un JDK 25 (javac 25), generando un `.class` de Java 25 (si lo ejecutas con 17/21, fallará con *“Unsupported class file major version 69”*).
+
+**Importante**: Cada vez que se modifique el pom.xml, hay que recargar los proyectos de Maven. En IntelliJ, haz click en *“Reload All Maven Projects”*.
+
+> Nota: Al darle a *Run* en IntelliJ, el IDE lee el `pom.xml`, resuelve y descarga los artefactos (los JARs de dependencias como `slf4j-api` y `logback-classic`) al repo local y los pone en el classpath; luego invoca `javac` del JDK 25 (debes tenerlo como Project SDK para que cuadre con `<release>25</release>`) y compila los `.java` a bytecode `.class` en `target/classes` (formato de clase de Java 25), tras lo cual la JVM ejecuta el `main` de `es.europea.ficheros.Ex1ReadText` cargando las clases y las de los artefactos del classpath. Durante la ejecución, SLF4J envía los logs a Logback, que imprime en consola con su configuración por defecto (aunque no exista `logback.xml`).
