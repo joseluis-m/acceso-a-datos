@@ -184,7 +184,7 @@ Ahora veremos algunas propiedades clave para el ejercicio que hemos realizado an
 ```xml
   <properties>                                                               
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>25</maven.compiler.release>
     <slf4j.version>2.0.13</slf4j.version>
     <logback.version>1.5.6</logback.version>
   </properties>
