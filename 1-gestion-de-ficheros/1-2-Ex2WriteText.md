@@ -42,7 +42,7 @@ Con todo esto ya en nuestro proyecto, podemos comenzar a codificar. Es recomenda
  * de directorios y opciones explícitas (CREATE + TRUNCATE_EXISTING).
  */
 public final class Ex2WriteText {
-  \\ TODO: implementar
+  // TODO: implementar
 }
 ```
 
