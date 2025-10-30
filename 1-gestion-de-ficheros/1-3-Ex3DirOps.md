@@ -96,19 +96,8 @@ Ahora vamos con el punto clave:
                 BasicFileAttributes attrs = Files.readAttributes(p, BasicFileAttributes.class);
                 String type = attrs.isDirectory() ? "DIR " : (attrs.isRegularFile() ? "FILE" : "OTRO");
                 long size = attrs.size();
-                String mod = attrs.lastModifiedTime()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .format(TS_FMT);
+                String mod = attrs.lastModifiedTime().toInstant().atZone(ZoneId.systemDefault()).format(TS_FMT);
                 log.info("{}  {} bytes  {}  {}", type, size, mod, p.getFileName());
-            }
-        }
-
-        // Ejemplo de filtrado por extensión .txt
-        try (DirectoryStream<Path> txts = Files.newDirectoryStream(dir, "*.txt")) {
-            log.info("Archivos .txt en {}:", dir.getFileName());
-            for (Path p : txts) {
-                log.info(" - {}", p.getFileName());
             }
         }
 ```
@@ -119,7 +108,31 @@ Ojo, no recorre recursivamente subdirectorios.
 Usamos `Path` que es la representación moderna de una ruta de archivo/carpeta (no un String) para recorrer cada entrada (variable `p`, que es el `Path` de cada entrada, archivo o subcarpeta).
 
 A continuación, cargamos los metadatos de cada entrada con `Files.readAttributes(...)`. es un API uniforme en Windows/Linux/macOS.
-Después, comprobamos a partir de los atributos si la entrada es un directorio (`"DIR"`) con `isDirectory()`.
-Si no lo es, comprobamos si es un archivo regular (`"FILE"`) con `isRegularFile()`.
-Si no es ninguna de las anteriores (`“OTRO”`), podría ser un symlink (enlace simbólico, como un puntero que apunta a otra ruta), socket (archivo especial para comunicación entre procesos), fifo (tubería para pasar datos de un proceso a otro en orden)…
-El método `attrs.size()` devuelve el tamaño en bytes del objeto de fichero consultado.
+
+- Comprobamos a partir de los atributos si la entrada es un directorio (`"DIR"`) con `isDirectory()`. Si no lo es, comprobamos si es un archivo regular (`"FILE"`) con `isRegularFile()`. Si no es ninguna de las anteriores (`“OTRO”`), podría ser un symlink (enlace simbólico, como un puntero que apunta a otra ruta), socket (archivo especial para comunicación entre procesos), fifo (tubería para pasar datos de un proceso a otro en orden)…
+- El método `attrs.size()` devuelve el tamaño en bytes del objeto de fichero consultado.
+- Paso a paso, veamos como obtener el timestamp:
+  - `lastModifiedTime()` nos da un `FileTime`.
+  - `toInstant()` lo convierte a `Instant` (tiempo “UTC puro”).
+  - `atZone(ZoneId.systemDefault())` aplica nuestra zona horaria local (la del SO) y nos devuelve un `ZonedDateTime`.
+  - `format(TS_FMT)` imprime el `String` según el patrón que hemos especificado anteriormente (`"yyyy-MM-dd HH:mm:ss"`).
+- Con toda esta información, usamos `log.info(...)` para mostrar por cada entrada: su tipo, tamaño, timestamp y nombre.
+
+Después, tenemos un ejemplo para filtrar archivos con extensión `.txt`:
+
+```java
+        // Ejemplo de filtrado por extensión .txt
+        try (DirectoryStream<Path> txts = Files.newDirectoryStream(dir, "*.txt")) {
+            log.info("Archivos .txt en {}:", dir.getFileName());
+            for (Path p : txts) {
+                log.info(" - {}", p.getFileName());
+            }
+        }
+```
+
+Se hace un filtro usando el patrón *glob* (diferente a regex), en el que se usan comodines (como "*") para encontrar archivos. En nuestro ejemplo, con `"*.txt"` buscamos cualquier nombre de archivo que termine en *".txt"* (solo en este directorio, no es recursivo).
+Escribimos un log con información sobre la ruta del archivo.
+Análogamente a como hemos realizado anteriormente, iterameos sobre cada `Path` que hay en `DirectoryStream`.
+Por último, con un log de información mostramos solo las entradas que contienen `"*.txt"` después de haber aplicado el glob.
+
+Con esto completado, tenemos completado el ejercicio 3. Solo queda probar que funcione correctamente en IntelliJ.
