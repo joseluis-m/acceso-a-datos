@@ -135,4 +135,11 @@ Si la `pos == length`, es escribe al final extendiendo el fichero.
 Por último, se posiciona y escribe el int (sobrescribe 4 bytes).
 
 > Nota: Aunque `RandomAccessFile` permite por defecto escribir más allá del final, y los bytes intermedios se rellenan con ceros, en nuestro ejercicio no se realiza para mantener el fichero denso y sin huecos.
-> 
+
+Con esto concluimos el ejercicio 4. Cabe destacar que la razón de ver acceso aleatorio no es “leer más rápido por leer”, sino poder saltar directamente a la parte del fichero que importa y modificar en el mismo lugar sin rehacerlo todo.
+En tareas reales como ficheros de registros de tamaño fijo (clientes/productos) o índices auxiliares (`id → offset`), el patrón es siempre el mismo: calcula el offset y haz seek para leer/escribir solo esos bytes. Eso reduce un trabajo `O(n)` (recorrer todo el archivo secuencialmente o reescribirlo) a `O(1)` (ir directo a la posición), ahorrando tiempo, E/S y memoria, especialmente en ficheros grandes o con operaciones muy frecuentes.
+
+Nuestro ejercicio es simple a propósito, pero ilustra bien todo esto: leer/modificar el elemento n sin tocar los anteriores.
+Sí, con acceso secuencial podríamos llegar al 10.º entero recorriendo los nueve primeros, y para cambiarlo terminaríamos reescribiendo desde ahí o usando un temporal.
+Sin embargo, eso escala mal y complica la consistencia. Con acceso aleatorio, actualizamos en el mismo sitio ese `int` (o un campo concreto de un registro) y listo.
+Podemos llevar este mismo patrón a casos típicos: marcar una baja lógica en un registro o actualizar el saldo de un cliente. Ahí es donde el acceso aleatorio se convierte en una herramienta imprescindible.
