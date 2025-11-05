@@ -93,6 +93,7 @@ Nuestro método recibe dos rutas NIO y con `throws IOException` el método `main
 
 En primer lugar, validamos. Si el fichero no existe, se falla rápido con una excepción específica de NIO (`NoSuchFileException`) que incluye la ruta absoluta en el mensaje.
 Después, obtenemos la obtiene la carpeta contenedora del destino (`parent`). Si no existe, la creamos recursivamente. Así, evitamos `NullPointerException` cuando `jsonPath` no tiene carpeta (por ejemplo, `"salida.json"`).
+
 `CsvMapper` es el parser de Jackson para CSV. Proporciona APIs para mapear filas de texto a objetos Java (POJOs/records) sin tener que parsear “a mano”.
 Por último, definimos el esquema `CsvSchema` especificando que la primera línea del CSV trae las cabeceras.
 Jackson usará esos nombres de columna para emparejarlos por nombre con los campos de nuestro tipo Java (`nombre`, `edad`, `ciudad`) o lo que sea que marquemos con `@JsonProperty`).
@@ -117,4 +118,27 @@ Es decir, las claves del JSON coinciden con los nombres de columna del CSV (o co
         }
 ```
 
-Finalmente, 
+Por último, abrimos el CSV con un `BufferedReader` en `UTF-8` dentro de un *try-with-resources*. Así el stream se cierra siempre (incluso ante excepciones).
+
+> Nota: Java es tipado estático, por lo que `var` solo aplica inferencia local (el tipo sigue siendo el mismo que el de la derecha, `BufferedReader`), así que úsalo cuando el tipo sea obvio. Si buscas claridad o programar contra la interfaz mínima necesaria (es decir, declarar y depender del tipo más genérico que te da justo los métodos que necesitas para tener un código menos acoplado y más flexible), declara el tipo explícito (`Reader`).
+
+Después, le decimos a Jackson CSV: “lee filas del `Reader` (`in`) y mapea cada una al tipo `Persona` usando el schema con cabecera (`schema`)”. El `MappingIterator` permite recorrer el CSV fila a fila (streaming) sin tener que parsear manualmente.
+
+Después, teniendo nuestra instancia de `CsvMapper` que sabe leer CSV y convertir cada fila en objetos Java, hacemos lo siguiente:
+- `.readerFor(Persona.class)`: cada fila del CSV, se mapea al tipo Java de `Persona`, que es un `record` con `nombre`, `edad` y `ciudad`.
+- `.with(schema)`: adjuntamos un `CsvSchema` que define cómo interpretar el CSV. Como lo creamos con `.withHeader()`, la primera línea es la cabecera. Jackson buscará columnas y las casará por nombre con los parámetros del `record` (o, en nuestro caso, los `@JsonProperty` que hemos definido).
+- `.readValues(in)`: le pasamos el `Reader` abierto del fichero (`in`) y nos devuelve un iterador tipado `MappingIterator<Persona>` que lee bajo demanda (lazy), es decir, fila a fila, sin cargar todo el CSV de golpe.
+
+Luego, recorremos todas las filas del iterador (`it.readAll()`) y las cargamos en memoria como una lista (`List<Persona>`). Es simple y cómodo para CSV pequeños/medianos. Para archivos más grandes, podríamos recorrerlo con `while(it.hasNext())` e ir escribiendo en streaming para no usar toda la RAM.
+Con el logger indicamos cuántos registros hemos parseado, útil para diagnósticos, métricas y verificación en ejecución (observabilidad básica).
+
+Ahora, instanciamos un mapper JSON “normal” de Jackson con `new ObjectMapper()` (no el de CSV). Este es el responsable de serializar objetos Java (List<Persona>) a JSON.
+Serializamos la lista a JSON “bonito” (identado) y se escribe en un fichero (`jsonPath`). Jackson se encarga de abrir/cerrar el stream de salida. Si el fichero existe, lo sobrescribe. Si no existe, lo crea.
+Al final se muestra un mensaje de éxito con la ruta absoluta.
+
+> Nota: Serializar es transformar un objeto o estructura de datos en una secuencia de bytes o en un formato intercambiable (p. ej., JSON) para almacenarlo o enviarlo y poder reconstruirlo luego.
+> En nuestro ejercicio, `ObjectMapper` convierte `List<Persona>` en JSON con *pretty print*, ese texto se codifica en UTF-8 y se escribe como bytes en el archivo de salida (`jsonPath`).
+
+Con todo esto, nuestro ejercicio está casi completado, solo nos faltaría actualizar el `pom.xml` de Maven.
+
+### pom.xml
