@@ -11,12 +11,17 @@ import org.slf4j.LoggerFactory;
 ```
 
 Luego importamos importamos la librería `IOException` para manejar excepciones de `NIO/IO`.
+Después, usamos: `Path`, para representar una ruta del sistema de archivos; `Files`, que ofrece métodos estáticos para crear, copiar, mover, borrar, leer/escribir y consultar atributos de archivos/directorios; y `DirectoryStream`, que  permite iterar eficientemente el contenido de un directorio usando try-with-resources.
 `BasicFileAttributes` se usa para metadatos portables (tamaño, timestamps, flags).
 `java.time` es la API para manejar fechas (nos interesa la zona horaria y el formateador de fechas).
 
+> Nota: `Paths.get(...)` y `Path.of(...)` hacen lo mismo (crean un `Path` en el file system por defecto) y, a nivel práctico, son equivalentes; `Path.of` se añadió en Java 11 para seguir el estilo moderno de fábricas en la propia interfaz (es decir, se usan métodos estáticos que te entregan un objeto ya listo en vez de instanciarlo con `new`) y porque Javadoc recomienda preferirlo (indica que `Paths` podría deprecarse en el futuro). Además, recuerda que `Files` pertenece a NIO.2 y aporta operaciones más ricas (atributos, enlaces simbólicos, excepciones en vez de booleanos, etc.). Usa File solo si una API legacy lo exige.
+
 ```java
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
