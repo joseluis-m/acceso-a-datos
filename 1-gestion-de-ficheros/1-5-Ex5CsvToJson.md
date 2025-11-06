@@ -101,7 +101,7 @@ Si la cabecera dice `name,age,city`, cada fila se convertirá en un objeto JSON 
 Es decir, las claves del JSON coinciden con los nombres de columna del CSV (o con el alias de `@JsonProperty`).
 
 > Nota: Si puedes cambiar a la vez el record y el CSV/JSON, se podría omitir el uso de `@JsonProperty` (en nuestro ejercicio, podríamos omitirlo).
-> Sin embargo, en producción no siempre podemos controlar el exterior, por lo que @JsonProperty fija los nombres de los campos y permite refactorizar por dentro sin romper integraciones.
+> Sin embargo, en producción no siempre podemos controlar el exterior, por lo que `@JsonProperty` fija los nombres de los campos y permite refactorizar por dentro sin romper integraciones.
 
 ```java
 
