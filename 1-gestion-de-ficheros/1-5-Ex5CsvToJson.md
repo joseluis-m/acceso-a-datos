@@ -142,3 +142,48 @@ Al final se muestra un mensaje de éxito con la ruta absoluta.
 Con todo esto, nuestro ejercicio está casi completado, solo nos faltaría actualizar el `pom.xml` de Maven.
 
 ### pom.xml
+
+Recordemos, Maven es la herramienta de build estándar en Java. Orquesta todo el ciclo de vida del proyecto: compilar, ejecutar tests, empaquetar, gestionar dependencias y plugins. Su fuerza está en la gestión de dependencias y en builds reproducibles.
+
+> Nota: Un build es el proceso (y también el resultado) de transformar código fuente en un artefacto ejecutable o desplegable de forma automatizada. Suele incluir pasos como resolver dependencias, compilar, ejecutar tests y empaquetar (p. ej., JAR/WAR, imagen de Docker).
+
+El `pom.xml` es el descriptor (es decir, el archivo de metadatos que describe un proyecto y cómo construirlo/ejecutarlo) de nuestro proyecto Maven. Define la identidad del artefacto (groupId, artifactId, version), propiedades (por ejemplo, Java 17 y UTF-8), dependencias que el código necesita y plugins (por ejemplo, el compilador). IntelliJ lo lee y configura el proyecto automáticamente.
+
+> Nota: Un artefacto es el resultado empaquetado y versionado de un build que se publica/consume desde un repositorio. En Maven un artefacto tiene coordenadas GAV (groupId, artifactId, version) y tipo (packaging): por ejemplo JAR, WAR, POM, `*-sources.jar`, `*-javadoc.jar`.
+
+Para este ejercicio, necesitamos incluir una nueva dependencia. Cada `<dependency>` declara una librería externa que Maven debe resolver y descargar (normalmente desde Maven Central) y añadir al classpath. La dependencia se identifica por coordenadas (`groupId:artifactId:version`).
+
+> Nota: Maven Central es el repositorio público y estándar de la comunidad Java donde se publican y descargan librerías/artefactos (JARs) identificados por sus coordenadas GAV. Maven lo usa para resolver dependencias de forma automática (con checksums/firmas) y traerlas a tu proyecto.
+
+En el ejerccio 1, añadimos dos dependencias para logging.
+- `slf4j-api`: API de logging usada por nuestro código (`Logger`, `LoggerFactory`).
+- `logback-classic`: implementación (binding) que realmente escribe los logs.
+
+> Nota: Este patrón (API + implementación) es típico en producción y nos permite cambiar el backend sin tocar el código.
+
+Para el ejercicio 5, añadimos lo siguiente:
+
+```xml
+<!-- Jackson JSON + CSV -->
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.17.2</version>
+</dependency>
+
+<dependency>
+  <groupId>com.fasterxml.jackson.dataformat</groupId>
+  <artifactId>jackson-dataformat-csv</artifactId>
+  <version>2.17.2</version>
+</dependency>
+```
+
+En primer lugar tenemos `jackson-databind`, el “motor” de Jackson para (de)serializar JSON ↔ POJOs. Nos da la clase clave `ObjectMapper`, con la que convertimos objetos Java a JSON (y al revés), respetando anotaciones como `@JsonProperty`. Incluye la lógica de binding (mapea campos, tipos primitivos/colecciones, fechas, etc.) y trae transitivamente `jackson-core` y `jackson-annotations`, así que no necesitamos declararlas aparte. En este ejercicio lo usamos para escribir el array de `Persona` a JSON (pretty print, etc.).
+
+En segundo lugar tenemos `jackson-dataformat-csv`, un módulo adicional que enseña a Jackson a leer/escribir CSV. Proporciona `CsvMapper` y `CsvSchema` para parsear CSV (cabeceras, separadores, comillas) y mapear cada fila directamente a nuestro POJO/record (`Persona`). Sin este módulo, `ObjectMapper` solo entiende JSON. Con esto, podemos hacer `readerFor(Persona).with(schema).readValues(...)` y obtener un `MappingIterator<Persona>` para procesar filas en streaming (o `readAll()` en nuestro caso si el fichero es pequeño).
+
+Con todo esto, podemos realizar el ejercicio 5 para convertir CSV a una lista de `Persona`, que luego serializamos a JSON con `jackson-databind`.
+En IntelliJ, abre *View → Tool Windows → Maven* y pulsa el icono de *“Sync All Maven Projects”*.
+
+> Nota: En IntelliJ para Maven, *Sync All Maven Projects* hace una sincronización incremental, es decir, relee los cambios recientes de los `pom.xml` y actualiza lo mínimo en el modelo del IDE (perfiles, versiones, nuevas dependencias), sin reconstruir todo. Por otra parte, *Reload All Maven Projects* fuerza un reimportado completo. Limpia y vuelve a cargar toda la configuración Maven, re-resuelve dependencias y reconfigura módulos. Usa *Sync* tras cambios pequeños, y *Reload* tras cambios grandes (nuevos módulos, cambio de rama, settings.xml) o si *Sync* no refleja bien los cambios.
+
