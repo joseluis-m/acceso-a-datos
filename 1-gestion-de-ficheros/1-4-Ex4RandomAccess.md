@@ -41,7 +41,7 @@ public final class Ex4RandomAccess {
         try {
             // TODO: implementar
         } catch (IOException e) {
-            log.error("Error acceso aleatorio en {}: {}", path, e.toString(), e);
+            log.error("Error acceso aleatorio en {}: {}", path, e.getMessage(), e);
             System.exit(1);
         }
     }
