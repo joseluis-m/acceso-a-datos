@@ -67,7 +67,7 @@ Después, nos encontramos la función `main`, desde donde se orquestará todo ya
         try {
             writeUtf8Lines(output, lines);
         } catch (IOException e) {
-            log.error("Fallo escribiendo {}: {}", output, e.toString(), e);
+            log.error("Fallo escribiendo {}: {}", output, e.getMessage(), e);
             System.exit(1);
         }
     }
