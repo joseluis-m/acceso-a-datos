@@ -63,7 +63,7 @@ public final class Ex5CsvToJson {
         try {
             convertCsvToJson(csv, json);
         } catch (IOException e) {
-            log.error("Error convirtiendo CSV a JSON: {}", e.toString(), e);
+            log.error("Error convirtiendo CSV a JSON: {}", e.getMessage(), e);
             System.exit(1);
         }
     }
