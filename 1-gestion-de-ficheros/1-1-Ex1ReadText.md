@@ -90,7 +90,7 @@ public static void main(String[] args) {
     try {
         readUtf8Lines(input);
     } catch (IOException e) {
-        log.error("Fallo leyendo {}: {}", input, e.toString(), e);
+        log.error("Fallo leyendo {}: {}", input, e.getMessage(), e);
         System.exit(1);
     }
 }
