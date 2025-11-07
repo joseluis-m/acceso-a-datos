@@ -60,7 +60,7 @@ Luego finaliza el programa con un código de error (`System.exit(1)`).
         try {
             listDirectory(dir);
         } catch (IOException e) {
-            log.error("Error listando {}: {}", dir, e.toString(), e);
+            log.error("Error listando {}: {}", dir, e.getMessage(), e);
             System.exit(1);
         }
     }
