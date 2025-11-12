@@ -50,7 +50,7 @@ En este ejercicio, vamos a comprobar que podemos conectarnos a la BD usando un p
 
 > Nota: HikariCP es un pool de conexiones JDBC que mantiene algunas conexiones (TCP/IP con puertos) a la base de datos abiertas y las reutiliza para que tu aplicación sea más rápida y eficiente
 
-## pom.xml
+## `pom.xml`
 
 Antes de comenzar, vamos a ver cómo tenemos actualmente el archivo `pom.xml` con todas las dependencias configuradas para que funcione nuestro ejercicio (estamos usando JDK 25).
 
