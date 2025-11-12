@@ -50,6 +50,103 @@ En este ejercicio, vamos a comprobar que podemos conectarnos a la BD usando un p
 
 > Nota: HikariCP es un pool de conexiones JDBC que mantiene algunas conexiones (TCP/IP con puertos) a la base de datos abiertas y las reutiliza para que tu aplicación sea más rápida y eficiente
 
+## pom.xml
+
+Antes de comenzar, vamos a ver cómo tenemos actualmente el archivo `pom.xml` con todas las dependencias configuradas para que funcione nuestro ejercicio (estamos usando JDK 25).
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>es.europea</groupId>
+  <artifactId>acceso-a-datos</artifactId>
+  <version>1.0.0</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>25</maven.compiler.release>
+    <!-- Versiones centralizadas -->
+    <slf4j.version>2.0.13</slf4j.version>
+    <logback.version>1.5.20</logback.version>
+    <jackson.version>2.17.2</jackson.version>
+    <hikari.version>5.1.0</hikari.version>
+    <mysql.connector.version>9.5.0</mysql.connector.version>
+    <h2.version>2.2.224</h2.version>
+  </properties>
+
+  <dependencies>
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+
+    <!-- Jackson JSON + CSV -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-csv</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
+    <!-- Pool de conexiones -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>${hikari.version}</version>
+    </dependency>
+
+    <!-- Conectores JDBC -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${mysql.connector.version}</version>
+      <scope>runtime</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>${h2.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Compilador -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+```
+
+## Código Java
+
 Al inicio, tenemos el paquete donde está este ejercicio (es recomendable mantener una estructura por capas, en nuestro caso:
 ```java
 package es.europea.jdbc;
