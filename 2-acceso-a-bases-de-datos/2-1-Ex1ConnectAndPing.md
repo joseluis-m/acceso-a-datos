@@ -175,6 +175,24 @@ Por último, configuramos el compilador con `--release 25` (opción de `javac`) 
 </project>
 ```
 
+## `logback.xml`
+
+```xml
+<configuration>
+  <!-- Appender a STDOUT con patrón: hora, nivel, logger y mensaje -->
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Raíz al nivel INFO (puedes elevar a DEBUG durante desarrollo si necesitas más detalle) -->
+  <root level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
+```
+
 ## Código Java
 
 Al inicio, tenemos el paquete donde está este ejercicio (es recomendable mantener una estructura por capas, en nuestro caso:
