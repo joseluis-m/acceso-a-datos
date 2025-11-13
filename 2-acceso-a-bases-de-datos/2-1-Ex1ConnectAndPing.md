@@ -53,17 +53,32 @@ En este ejercicio, vamos a comprobar que podemos conectarnos a la BD usando un p
 ## `pom.xml`
 
 Antes de comenzar, vamos a ver cómo tenemos actualmente el archivo `pom.xml` con todas las dependencias configuradas para que funcione nuestro ejercicio (estamos usando JDK 25).
+En primer lugar, tenemos la raíz del POM (Project Object Model), la cual define el documento POM y sus namespaces para que Maven pueda validarlo contra el esquema oficial.
+También especificamos la versión del modelo POM (la actual y la estándar de Maven).
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+```
 
+Después, tenemos las coordenadas del artefacto:
+- `<groupId>`: Propietario lógico del proyecto (normalmente dominio invertido de tu organización).
+- `<artifactId>`: Nombre del artefacto (el JAR que Maven construirá).
+- `<version>`: Versión del artefacto (se usará en el nombre del JAR y como coordenada para dependencias).
+
+```xml
   <groupId>es.europea</groupId>
   <artifactId>acceso-a-datos</artifactId>
   <version>1.0.0</version>
+```
 
+En las propiedades, establecemos UTF-8 como codificación de fuentes/recursos y el compilador para que funcione con JDK 25.
+El resto de propiedades, las vamos incluyendo poco a poco (de momento, tenemos `slf4j.version`, `logback.version`, `jackson.version`, `hikari.version`, `mysql.connector.version`, `h2.version`).
+Centralizamos las versiones desde aquí para después referenciarlas con `${propiedad}` en dependencias, facilitando actualizar desde un único sitio.
+
+```xml
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>25</maven.compiler.release>
@@ -75,7 +90,18 @@ Antes de comenzar, vamos a ver cómo tenemos actualmente el archivo `pom.xml` co
     <mysql.connector.version>9.5.0</mysql.connector.version>
     <h2.version>2.2.224</h2.version>
   </properties>
+```
 
+Ahora incluimos toda la lista de dependencias de nuestro proyecto.
+- **Logging**: API de logging desacoplada, importando SLF4J (`org.slf4j:slf4j-api`); e implementación de logging, binding de SLF4J a Logback (`ch.qos.logback:logback-classic`).
+- **Jackson**: Lectura/escritura JSON, mapeando objetos a JSON (`com.fasterxml.jackson.core:jackson-databind`); y soporte CSV de lectura/escritura basado en Jackson (`com.fasterxml.jackson.dataformat:jackson-dataformat-csv`).
+- **Conexión a BD**: el pool de conexiones de alto rendimiento (`com.zaxxer:HikariCP`); el driver JDBC de MySQL (`com.mysql:mysql-connector-j`), excluyendo la dependencia transitiva `protobuf-java` porque no la necesitamos y evitamos un warning; y la BD embebida H2 (`com.h2database:h2`) ideal para desarrollo y pruebas locales.
+
+> Nota: En el driver JDBC de MySQL, usamos `runtime` porque compilamos contra `java.sql`.
+> El driver solo hace falta en ejecución para abrir la conexión, manteniendo limpio el classpath de compilación y sin exportarlo a dependientes (si no se indica `scope`, Maven usa compile por defecto).
+> También marcamos H2 como `runtime` porque no importamos clases de H2 (el motor solo se carga en ejecución para crear/usar la BD).
+
+```xml
   <dependencies>
     <!-- Logging -->
     <dependency>
@@ -128,7 +154,11 @@ Antes de comenzar, vamos a ver cómo tenemos actualmente el archivo `pom.xml` co
       <scope>runtime</scope>
     </dependency>
   </dependencies>
+```
 
+Por último, configuramos el compilador con `--release 25` (opción de `javac`) para compilar con JDK 25, de modo que el bytecode y las APIs usadas correspondan exactamente a esa versión.
+
+```xml
   <build>
     <plugins>
       <!-- Compilador -->
