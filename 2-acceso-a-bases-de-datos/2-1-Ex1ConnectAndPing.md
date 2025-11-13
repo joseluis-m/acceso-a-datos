@@ -46,7 +46,7 @@ No obstante, veremos que el código JDBC sería muy similar si optáramos por ot
 
 # Ejercicio 1
 
-En este ejercicio, vamos a comprobar que podemos conectarnos a la BD usando un pool de conexiones (HikariCP) y el conector idóneo (H2 embebida o MySQL) y validar la conexión con un ping SQL (SELECT 1). Esto cubre:
+En este ejercicio, vamos a comprobar que podemos conectarnos a la BD usando un pool de conexiones (HikariCP) y el conector idóneo (H2 embebido o MySQL) y validar la conexión con un ping SQL (SELECT 1). Esto cubre:
 
 > Nota: HikariCP es un pool de conexiones JDBC que mantiene algunas conexiones (TCP/IP con puertos) a la base de datos abiertas y las reutiliza para que tu aplicación sea más rápida y eficiente
 
